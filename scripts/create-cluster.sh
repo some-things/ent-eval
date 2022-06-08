@@ -21,7 +21,7 @@ main() {
 Deployment complete - you can now connect to the cluster via telepresence!
 
 MySQL Username: root
-MySQL Password: \$(kubectl get secret --namespace ent-eval my-mysql -o jsonpath="{.data.mysql-root-password}" | base64 -d)
+MySQL Password: kubectl get secret --namespace ent-eval my-mysql -o jsonpath="{.data.mysql-root-password}" | base64 -d
 
 export MYSQL_ROOT_PASSWORD=\$(kubectl get secret --namespace ent-eval my-mysql -o jsonpath="{.data.mysql-root-password}" | base64 -d)
 mysql -h my-mysql.ent-eval.svc.cluster.local -uroot -p"\$MYSQL_ROOT_PASSWORD"
