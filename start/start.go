@@ -21,10 +21,37 @@ func main() {
 		log.Fatalf("failed opening connection to mysql: %v", err)
 	}
 	defer client.Close()
+	ctx := context.Background()
 
 	// Run the auto migraiton tool
-	if err := client.Schema.Create(context.Background()); err != nil {
+	if err := client.Schema.Create(ctx); err != nil {
 		log.Fatalf("failed creating schema resources: %v", err)
+	}
+
+	// Create a user
+	if _, err = CreateUser(ctx, client); err != nil {
+		log.Fatalf("failed creating user: %v", err)
+	}
+
+	// Query the user
+	if _, err = QueryUser(ctx, client); err != nil {
+		log.Fatalf("failed querying user: %v", err)
+	}
+
+	// Create cars
+	a8m, err := CreateCars(ctx, client)
+	if err != nil {
+		log.Fatalf("failed creating cars: %v", err)
+	}
+
+	// Query cars
+	if err := QueryCars(ctx, a8m); err != nil {
+		log.Fatalf("failed querying cars: %v", err)
+	}
+
+	// Query car users
+	if err := QueryCarUsers(ctx, a8m); err != nil {
+		log.Fatalf("failed querying car users: %v", err)
 	}
 }
 
@@ -96,6 +123,22 @@ func QueryCars(ctx context.Context, a8m *ent.User) error {
 	if err != nil {
 		return fmt.Errorf("failed querying cars: %w", err)
 	}
-	log.Println(ford)
+	log.Println("a8m user's fords returned: ", ford)
+	return nil
+}
+
+func QueryCarUsers(ctx context.Context, a8m *ent.User) error {
+	cars, err := a8m.QueryCars().All(ctx)
+	if err != nil {
+		return fmt.Errorf("failed querying cars: %w", err)
+	}
+	// Query the inverse edge
+	for _, c := range cars {
+		owner, err := c.QueryOwner().Only(ctx)
+		if err != nil {
+			return fmt.Errorf("failed querying car %q owner: %w", c.Model, err)
+		}
+		log.Printf("car %q owner: %q\n", c.Model, owner.Name)
+	}
 	return nil
 }
